@@ -1,9 +1,10 @@
 import streamlit as st
 import sys
 import os
+import time
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scripts.ask_llm import ask_llm
+from scripts.ask_llm import ask_llm_with_web
 from scripts.web_search import search_web
 
 st.set_page_config(page_title="AI News Verifier")
@@ -20,28 +21,20 @@ if st.button("Check"):
     else:
         with st.spinner("Searching the web and verifying..."):
             # 🔁 TEMP: Hardcoded dummy search result
+            
+            progress_text = "🔍 Searching the web and verifying claim..."
+            progress_bar = st.progress(0, text=progress_text)
+
+            # simulate loading animation
+            for i in range(100):
+                time.sleep(0.01)
+                progress_bar.progress(i + 1, text=progress_text)
+            
             search_results = search_web(user_input, max_results=5)
 
-            search_summary = "\n".join(search_results)
-
-
-            # 🧠 Build prompt for LLM
-            prompt = f"""
-            Your job is to verify if this claim is true based on the search results below.
-            Please return output in this exact format:
-
-            VERDICT: TRUE or FALSE
-            EXPLANATION: Your reasoning here.
-
-            Search Results:
-            {search_summary}
-
-            Claim: '{user_input}'
-            """.strip()
-
-
             # 💬 Ask the LLM
-            response = ask_llm(prompt)
+            response = ask_llm_with_web(user_input, search_results)
+
 
             # Extract verdict + explanation
             verdict_line = next((line for line in response.splitlines() if "VERDICT:" in line), "")
